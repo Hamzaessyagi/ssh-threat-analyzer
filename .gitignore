@@ -1,0 +1,26 @@
+# ─── Auth logs - NE JAMAIS PUSHER ───────────────────────────
+*.log
+*.log.*
+*.log.1
+*.log.2
+auth.log*
+syslog*
+kern.log*
+
+# ─── Output generé automatiquement ──────────────────────────
+output/
+
+# ─── Python ──────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# ─── OS ──────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── Données sensibles ───────────────────────────────────────
+*.json
+!requirements*.txt
