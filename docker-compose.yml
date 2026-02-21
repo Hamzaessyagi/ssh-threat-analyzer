@@ -1,0 +1,31 @@
+# ─── SSH Threat Analyzer - Docker Compose ──────────────────────
+version: '3.8'
+
+services:
+
+  # ── Analyse principale ────────────────────────────────────────
+  analyze:
+    build: .
+    image: ssh-threat-analyzer
+    volumes:
+      - .:/data                          # monte tout le dossier projet
+    command: /data/auth.log.1 -o /data/output
+    # Usage: docker compose run analyze /data/auth.log.1 -o /data/output
+
+  # ── Visualisation ─────────────────────────────────────────────
+  visualize:
+    build: .
+    image: ssh-threat-analyzer
+    volumes:
+      - .:/data
+    entrypoint: ["python3", "scripts/visualize.py"]
+    command: /data/output/analysis.json -o /data/output/dashboard.png
+
+  # ── GeoIP ─────────────────────────────────────────────────────
+  geoip:
+    build: .
+    image: ssh-threat-analyzer
+    volumes:
+      - .:/data
+    entrypoint: ["python3", "scripts/service.py"]
+    command: enrich /data/output/analysis.json -o /data/output/analysis_geo.json

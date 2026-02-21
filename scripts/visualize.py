@@ -133,8 +133,26 @@ def generate_dashboard(data, outpath):
 def main():
     parser = argparse.ArgumentParser(description="Generate SSH threat visualizations")
     parser.add_argument("json_file", help="Path to analysis.json")
-    parser.add_argument("-o", "--output", default="output/dashboard.png")
+    parser.add_argument("-o", "--output", default=None, help="Output dashboard path (default: based on input filename)")
     args = parser.parse_args()
+
+    # Générer un nom de fichier de sortie basé sur le nom du fichier JSON d'entrée si non spécifié
+    if args.output is None:
+        json_basename = os.path.basename(args.json_file)
+        # Si le fichier commence par "analysis_", on extrait le nom de base
+        if json_basename.startswith("analysis_"):
+            base_name = json_basename[9:]  # Enlever "analysis_"
+            if base_name.endswith(".json"):
+                base_name = base_name[:-5]  # Enlever ".json"
+            dashboard_name = f"dashboard_{base_name}.png"
+        else:
+            # Sinon, utiliser le nom du fichier sans extension
+            base_name = os.path.splitext(json_basename)[0]
+            dashboard_name = f"dashboard_{base_name}.png"
+        
+        # Utiliser le même répertoire que le fichier JSON d'entrée
+        output_dir = os.path.dirname(args.json_file) or "output"
+        args.output = os.path.join(output_dir, dashboard_name)
 
     data = load_data(args.json_file)
     generate_dashboard(data, args.output)

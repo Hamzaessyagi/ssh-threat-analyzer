@@ -86,11 +86,23 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("logfile")
     parser.add_argument("-o", "--output", default="output")
+    parser.add_argument("--json-name", help="Custom JSON output filename (default: based on input filename)")
     args = parser.parse_args()
     os.makedirs(args.output, exist_ok=True)
     data = analyze_log(args.logfile)
     print_summary(data)
-    save_json(data, f"{args.output}/analysis.json")
+    
+    # Générer un nom de fichier unique basé sur le nom du fichier d'entrée
+    if args.json_name:
+        json_filename = args.json_name
+    else:
+        # Extraire le nom de base du fichier d'entrée (sans chemin)
+        input_basename = os.path.basename(args.logfile)
+        # Remplacer les caractères problématiques et créer le nom de sortie
+        safe_name = input_basename.replace("/", "_").replace("\\", "_")
+        json_filename = f"analysis_{safe_name}.json"
+    
+    save_json(data, f"{args.output}/{json_filename}")
 
 if __name__ == "__main__":
     main()

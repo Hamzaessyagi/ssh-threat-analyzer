@@ -86,20 +86,28 @@ main() {
     local do_geo="${2:-}"
     mkdir -p "$OUTPUT_DIR"
 
+    # Générer des noms de fichiers uniques basés sur le nom du fichier d'entrée
+    local input_basename
+    input_basename=$(basename "$logfile")
+    local safe_name
+    safe_name=$(echo "$input_basename" | sed 's/[\/\\]/_/g')
+    local json_file="${OUTPUT_DIR}/analysis_${safe_name}.json"
+    local dashboard_file="${OUTPUT_DIR}/dashboard_${safe_name}.png"
+
     # ── Steps ───────────────────────────────────────────────────
     check_deps
     validate_input "$logfile"
     run_quick_bash_stats "$logfile"
 
     step "Running Python deep analysis..."
-    python3 "$SCRIPTS_DIR/analyze.py" "$logfile" -o "$OUTPUT_DIR"
+    python3 "$SCRIPTS_DIR/analyze.py" "$logfile" -o "$OUTPUT_DIR" --json-name "analysis_${safe_name}.json"
 
     step "Generating visualizations..."
-    python3 "$SCRIPTS_DIR/visualize.py" "$OUTPUT_DIR/analysis.json" -o "$OUTPUT_DIR/dashboard.png"
+    python3 "$SCRIPTS_DIR/visualize.py" "$json_file" -o "$dashboard_file"
 
     if [[ "$do_geo" == "--geo" ]]; then
         step "Running GeoIP lookup (top 20 IPs)..."
-        python3 "$SCRIPTS_DIR/geoip.py" "$OUTPUT_DIR/analysis.json" -o "$OUTPUT_DIR/analysis_geo.json"
+        python3 "$SCRIPTS_DIR/geoip.py" "$json_file" -o "${OUTPUT_DIR}/analysis_geo_${safe_name}.json"
     fi
 
     # ── Final summary ───────────────────────────────────────────
@@ -108,13 +116,13 @@ main() {
     echo -e "${GREEN}${BOLD}  ✅  ANALYSIS COMPLETE!${NC}"
     echo -e "${GREEN}${BOLD}═══════════════════════════════════════${NC}"
     echo ""
-    echo -e "  📊 Dashboard   : ${CYAN}$OUTPUT_DIR/dashboard.png${NC}"
-    echo -e "  📋 JSON data   : ${CYAN}$OUTPUT_DIR/analysis.json${NC}"
+    echo -e "  📊 Dashboard   : ${CYAN}$dashboard_file${NC}"
+    echo -e "  📋 JSON data   : ${CYAN}$json_file${NC}"
     [[ "$do_geo" == "--geo" ]] && \
-    echo -e "  🌍 GeoIP data  : ${CYAN}$OUTPUT_DIR/analysis_geo.json${NC}"
+    echo -e "  🌍 GeoIP data  : ${CYAN}${OUTPUT_DIR}/analysis_geo_${safe_name}.json${NC}"
     echo ""
-    echo -e "  ${YELLOW}Tip: Open dashboard.png with:${NC}"
-    echo -e "  ${BOLD}xdg-open $OUTPUT_DIR/dashboard.png${NC}"
+    echo -e "  ${YELLOW}Tip: Open dashboard with:${NC}"
+    echo -e "  ${BOLD}xdg-open $dashboard_file${NC}"
     echo ""
 }
 
